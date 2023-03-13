@@ -1,0 +1,2 @@
+Time: 0 days 00:08:26
+Number of records in DB: 768622
