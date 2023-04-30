@@ -11,16 +11,42 @@ services:
       POSTGRES_DB: postgres
     networks:
       - test
-  
+
   python:
-    build: ./app/
+      build: ./app/
+      depends_on:
+        - db
+      networks:
+        - test
+      volumes:
+        - ./app:/usr/src/app
+  
+  python-lab-1:
+      build: ./app_lab1/
+      depends_on:
+        db:
+          condition: service_started
+        python:
+          condition: service_completed_successfully
+      networks:
+        - test
+      volumes:
+        - ./app_lab1:/usr/src/app
+  
+  flyway:
+    image: flyway/flyway
+    command: -url=jdbc:postgresql://db:5432/postgres -user=Admin -password=example migrate
+    volumes:
+      - ./sql:/flyway/sql
     depends_on:
-      - db
+        db:
+          condition: service_started
+        python-lab-1:
+          condition: service_completed_successfully
+    environment:
+      - FLYWAY_BASELINE_ON_MIGRATE=true
     networks:
       - test
-    volumes:
-      - ./app:/usr/src/app
-      
 
   adminer:
     image: adminer
@@ -29,6 +55,7 @@ services:
       - 8080:8080
     networks:
       - test
+  
 
 networks:
   test:
